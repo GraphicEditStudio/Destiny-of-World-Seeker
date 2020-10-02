@@ -103,11 +103,19 @@ namespace AnyRPG {
         [SerializeField]
         private Vector3 pickupScale = Vector3.one;
 
+        [Header("Attachment Points")]
 
-        public GameObject MyPrefab { get => prefab; }
-        public Vector3 MyPosition { get => position; }
-        public Vector3 MyRotation { get => rotation; }
-        public Vector3 MyScale { get => scale; }
+        [Tooltip("The name of the attachment profile to use for attaching other prefabs to this prefab")]
+        [SerializeField]
+        private string attachmentProfileName = string.Empty;
+
+        // reference to the actual attachment profile
+        private AttachmentProfile attachmentProfile = null;
+
+        public GameObject Prefab { get => prefab; }
+        public Vector3 Position { get => position; }
+        public Vector3 Rotation { get => rotation; }
+        public Vector3 Scale { get => scale; }
         public string TargetBone { get => targetBone; }
 
         public Vector3 SheathedPosition { get => sheathedPosition; }
@@ -121,6 +129,7 @@ namespace AnyRPG {
         public Vector3 PickupPosition { get => pickupPosition; set => pickupPosition = value; }
         public Vector3 PickupRotation { get => pickupRotation; set => pickupRotation = value; }
         public Vector3 PickupScale { get => pickupScale; set => pickupScale = value; }
+        public AttachmentProfile AttachmentProfile { get => attachmentProfile; set => attachmentProfile = value; }
 
         public override void SetupScriptableObjects() {
             base.SetupScriptableObjects();
@@ -142,6 +151,17 @@ namespace AnyRPG {
                     Debug.LogError("PrefabProfile.SetupScriptableObjects(): UNABLE TO FIND AudioProfile " + unsheathAudioProfile + " while initializing " + DisplayName + ". CHECK INSPECTOR!");
                 }
             }
+
+            if (attachmentProfileName != null && attachmentProfileName != string.Empty) {
+                AttachmentProfile tmpAttachmentProfile = SystemAttachmentProfileManager.MyInstance.GetResource(attachmentProfileName);
+                if (tmpAttachmentProfile != null) {
+                    attachmentProfile = tmpAttachmentProfile;
+                } else {
+                    Debug.LogError("PrefabProfile.SetupScriptableObjects(): UNABLE TO FIND AudioProfile " + attachmentProfileName + " while initializing " + DisplayName + ". CHECK INSPECTOR!");
+                }
+            }
         }
     }
+
+
 }

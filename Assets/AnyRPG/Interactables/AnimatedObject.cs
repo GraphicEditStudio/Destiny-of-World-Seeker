@@ -49,7 +49,7 @@ namespace AnyRPG {
             if (objectOpen) {
                 coroutine = StartCoroutine(animateObject(interactable.MyPrefabProfile.SheathedRotation, interactable.MyPrefabProfile.SheathedPosition, interactable.MyPrefabProfile.SheathAudioProfile));
             } else {
-                coroutine = StartCoroutine(animateObject(interactable.MyPrefabProfile.MyRotation, interactable.MyPrefabProfile.MyPosition, interactable.MyPrefabProfile.UnsheathAudioProfile));
+                coroutine = StartCoroutine(animateObject(interactable.MyPrefabProfile.Rotation, interactable.MyPrefabProfile.Position, interactable.MyPrefabProfile.UnsheathAudioProfile));
             }
             // lerp them to the other state, using the values defined in their sheathed and regular positions
 
@@ -57,6 +57,7 @@ namespace AnyRPG {
         }
 
         private IEnumerator animateObject(Vector3 newAngle, Vector3 newPosition, AudioProfile audioProfile) {
+            newAngle = new Vector3(newAngle.x < 0 ? newAngle.x + 360 : newAngle.x, newAngle.y < 0 ? newAngle.y + 360 : newAngle.y, newAngle.z < 0 ? newAngle.z + 360 : newAngle.z);
             Quaternion originalRotation = interactable.MySpawnReference.transform.localRotation;
             Vector3 originalPosition = interactable.MySpawnReference.transform.localPosition;
             //Debug.Log(gameObject.name + ".AnimatedObject.animateObject(" + newAngle + ", " + newPosition + "): original position: " + originalPosition + "; rotation: " + originalRotation);
@@ -73,7 +74,15 @@ namespace AnyRPG {
             while (interactable.MySpawnReference.transform.localEulerAngles != newAngle || interactable.MySpawnReference.transform.localPosition != newPosition) {
                 //Debug.Log(gameObject.name + ".AnimatedObject.animateObject(" + newAngle + ", " + newPosition + "): localEulerAngles: " + interactable.MySpawnReference.transform.localEulerAngles + "; position: " + interactable.MySpawnReference.transform.localPosition);
                 //Quaternion newRotation = Quaternion.Lerp(originalRotation, Quaternion.Euler(newAngle), 0.01f);
-                Quaternion newRotation = Quaternion.RotateTowards(interactable.MySpawnReference.transform.localRotation, Quaternion.Euler(newAngle), rotationSpeed);
+                //Quaternion newRotation = Quaternion.RotateTowards(interactable.MySpawnReference.transform.localRotation, Quaternion.Euler(newAngle), rotationSpeed);
+
+                // get a separate quaternion rotation to avoid issues with negative start angles
+                //Quaternion tmpRotation = interactable.MySpawnReference.transform.localRotation * Quaternion.Euler(newAngle);
+                //Vector3 realNewAngle = tmpRotation.eulerAngles;
+
+                Quaternion newRotation = Quaternion.RotateTowards(Quaternion.Euler(interactable.MySpawnReference.transform.localEulerAngles), Quaternion.Euler(newAngle), rotationSpeed);
+                //Quaternion newRotation = Quaternion.RotateTowards(interactable.MySpawnReference.transform.localRotation, Quaternion.Euler(realNewAngle), rotationSpeed);
+                //Quaternion newRotation = Quaternion.RotateTowards(interactable.MySpawnReference.transform.localRotation, tmpRotation, rotationSpeed);
                 Vector3 newLocation = Vector3.MoveTowards(interactable.MySpawnReference.transform.localPosition, newPosition, movementSpeed);
                 interactable.MySpawnReference.transform.localPosition = newLocation;
                 interactable.MySpawnReference.transform.localRotation = newRotation;
