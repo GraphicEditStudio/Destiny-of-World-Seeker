@@ -1,0 +1,6 @@
+{
+    "threadedArchiving": true,
+    "logCacheMiss": false,
+    "slimWriteResults": true,
+    "maximumCacheSize": 200
+}
