@@ -306,7 +306,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00ee9ce2b5aded841b4459f4c4f4a434, type: 3}
   m_Name: 
@@ -425,6 +425,26 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3694514818765831313, guid: cfd4b48e8cb62034e873571662c999d4, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3694514819657838481, guid: cfd4b48e8cb62034e873571662c999d4, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3694514819667542013, guid: cfd4b48e8cb62034e873571662c999d4, type: 3}
+      propertyPath: makePersistent
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3694514819667542013, guid: cfd4b48e8cb62034e873571662c999d4, type: 3}
+      propertyPath: useJsonIndex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3694514819667542013, guid: cfd4b48e8cb62034e873571662c999d4, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3694514819667542013, guid: cfd4b48e8cb62034e873571662c999d4, type: 3}
+      propertyPath: useEncryptedBundles
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
