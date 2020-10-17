@@ -65,9 +65,9 @@ namespace AnyRPG {
         public Faction Faction {
 
             get {
-                if (CharacterController != null && CharacterController.MyUnderControl) {
+                if (CharacterController != null && CharacterController.UnderControl) {
                     //Debug.Log(gameObject.name + ".MyFactionName: return master unit faction name");
-                    return CharacterController.MyMasterUnit.Faction;
+                    return CharacterController.MasterUnit.Faction;
                 }
                 return faction;
             }
@@ -145,15 +145,20 @@ namespace AnyRPG {
                 characterAbilityManager.OrchestratorStart();
             }
 
+            // can this next block happen in orchestrator finish ?
             if (characterEquipmentManager != null) {
                 characterEquipmentManager.OrchestratorStart();
-                characterEquipmentManager.LoadDefaultEquipment();
+                //characterEquipmentManager.LoadDefaultEquipment();
             } else {
                 //Debug.Log(gameObject.name + ": BaseCharacter.Start(): characterEquipmentManager is null");
             }
+            /*
             if (characterAbilityManager != null) {
                 characterAbilityManager.LearnDefaultAutoAttackAbility();
             }
+            */
+
+
             if (characterPetManager != null) {
                 characterPetManager.OrchestratorStart();
             }
@@ -165,8 +170,14 @@ namespace AnyRPG {
                 characterStats.OrchestratorFinish();
             }
             if (characterEquipmentManager != null) {
+                characterEquipmentManager.LoadDefaultEquipment();
                 characterEquipmentManager.OrchestratorFinish();
             }
+
+            if (characterAbilityManager != null) {
+                characterAbilityManager.LearnDefaultAutoAttackAbility();
+            }
+
         }
 
         protected virtual void Start() {

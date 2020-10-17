@@ -30,9 +30,17 @@ namespace AnyRPG {
         [SerializeField]
         private bool automatic = false;
 
+        [Tooltip("Can this behavior be started manually by interaction with the player")]
+        [SerializeField]
+        private bool allowManualStart = true;
+
         [Tooltip("Can this behavior be repeated or should it only play once per game.")]
         [SerializeField]
         private bool repeatable = false;
+
+        [Tooltip("Should this behavior restart when complete.")]
+        [SerializeField]
+        private bool looping = false;
 
         public bool MyPrerequisitesMet {
             get {
@@ -62,6 +70,8 @@ namespace AnyRPG {
         }
 
         public bool Repeatable { get => repeatable; set => repeatable = value; }
+        public bool Looping { get => looping; set => looping = value; }
+        public bool AllowManualStart { get => allowManualStart; set => allowManualStart = value; }
 
         public void HandlePrerequisiteUpdates() {
             // call back to owner

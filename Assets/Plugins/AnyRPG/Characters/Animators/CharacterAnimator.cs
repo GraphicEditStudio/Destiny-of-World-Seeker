@@ -205,12 +205,14 @@ namespace AnyRPG {
         }
 
         public void DisableRootMotion() {
+            //Debug.Log(gameObject.name + ": CharacterAnimator.DisableRootMotion()");
             if (animator != null) {
                 animator.applyRootMotion = false;
             }
         }
 
         public void EnableRootMotion() {
+            //Debug.Log(gameObject.name + ": CharacterAnimator.EnableRootMotion()");
             if (animator != null) {
                 animator.applyRootMotion = true;
             }
@@ -256,7 +258,7 @@ namespace AnyRPG {
         }
 
         public virtual void SetDefaultOverrideController(bool runUpdate = true) {
-            //Debug.Log(gameObject.name + ".CharacterAnimator.SetOverrideController()");
+            //Debug.Log(gameObject.name + ".CharacterAnimator.SetDefaultOverrideController()");
             SetOverrideController(overrideController, runUpdate);
         }
 
@@ -530,11 +532,13 @@ namespace AnyRPG {
 
             if (overrideControllerClipList.Contains(systemAnimations.MyCombatIdleClip.name)) {
                 if (currentAnimationProfile.MyCombatIdleClip != null) {
+                    //Debug.Log(gameObject.name + ".CharacterAnimator.SetAnimationClipOverrides(): combat idle clip is not null");
                     if (overrideController[systemAnimations.MyCombatIdleClip.name] != currentAnimationProfile.MyCombatIdleClip) {
                         overrideController[systemAnimations.MyCombatIdleClip.name] = currentAnimationProfile.MyCombatIdleClip;
                         currentAnimations.MyCombatIdleClip = currentAnimationProfile.MyCombatIdleClip;
                     }
                 } else {
+                    //Debug.Log(gameObject.name + ".CharacterAnimator.SetAnimationClipOverrides(): combat idle clip is null");
                     if (defaultAnimationProfile.MyCombatIdleClip != null && overrideController[systemAnimations.MyCombatIdleClip.name] != defaultAnimationProfile.MyCombatIdleClip) {
                         overrideController[systemAnimations.MyCombatIdleClip.name] = defaultAnimationProfile.MyCombatIdleClip;
                         currentAnimations.MyCombatIdleClip = defaultAnimationProfile.MyCombatIdleClip;
@@ -1449,7 +1453,7 @@ namespace AnyRPG {
         }
 
         public void SetVelocity(Vector3 varValue, bool rotateModel = false) {
-            //Debug.Log(gameObject.name + ".CharacterAnimator.SetVelocity(" + varValue + ")");
+            //Debug.Log(gameObject.name + ".CharacterAnimator.SetVelocity(" + varValue + ", " + rotateModel + ")");
             // receives velocity in LOCAL SPACE
 
             if (animator == null) {
@@ -1457,6 +1461,8 @@ namespace AnyRPG {
             }
 
             if (rotateModel) {
+                //Debug.Log(gameObject.name + ".CharacterAnimator.SetVelocity(" + varValue + "): rotating model");
+
                 if (varValue == Vector3.zero) {
                     animator.transform.forward = transform.forward;
                 } else {
@@ -1618,6 +1624,7 @@ namespace AnyRPG {
             if (animator == null) {
                 return;
             }
+            //Debug.Log(gameObject.name + ".CharacterAnimator.SetTurnVelocity(" + varValue + ")");
             animator.SetFloat("TurnVelocity", varValue);
         }
 
@@ -1650,6 +1657,9 @@ namespace AnyRPG {
             //Debug.Log(gameObject.name + ".CharacterAnimator.SetTrigger(" + varName + ")");
             if (animator != null) {
                 if (ParameterExists(varName)) {
+                    // testing unity bug, so reset trigger in case character is triggered twice in a frame
+                    animator.ResetTrigger(varName);
+
                     animator.SetTrigger(varName);
                 }
             }
@@ -1664,7 +1674,7 @@ namespace AnyRPG {
         }
 
         public void PerformEquipmentChange(Equipment newItem, Equipment oldItem) {
-            //Debug.Log(gameObject.name + ".CharacterAnimator.PerformEquipmentChange(" + (newItem == null ? "null" : newItem.MyName) + ", " + (oldItem == null ? "null" : oldItem.MyName) + ")");
+            //Debug.Log(gameObject.name + ".CharacterAnimator.PerformEquipmentChange(" + (newItem == null ? "null" : newItem.DisplayName) + ", " + (oldItem == null ? "null" : oldItem.DisplayName) + ")");
             // Animate grip for weapon when an item is added or removed from hand
             if (newItem != null && newItem is Weapon && (newItem as Weapon).MyDefaultAttackAnimationProfile != null) {
                 //Debug.Log(gameObject.name + ".CharacterAnimator.PerformEquipmentChange: we are animating the weapon");

@@ -175,7 +175,7 @@ namespace AnyRPG {
         }
 
         public void SetMasterRelativeDestination() {
-            if (MyUnderControl == false) {
+            if (UnderControl == false) {
                 // only do this stuff if we actually have a master
                 //Debug.Log(gameObject.name + ".AIController.SetMasterRelativeDestination(): not under control");
                 return;
@@ -214,7 +214,7 @@ namespace AnyRPG {
             if (target != null) {
                 distanceToTarget = Vector3.Distance(target.transform.position, transform.position);
             }
-            if (MyControlLocked) {
+            if (ControlLocked) {
                 // can't allow any action if we are stunned/frozen/etc
                 //Debug.Log(gameObject.name + ".AIController.FixedUpdate(): controlLocked: " + MyControlLocked);
                 return;
@@ -351,7 +351,7 @@ namespace AnyRPG {
             if (baseCharacter != null) {
                 baseCharacter.CharacterStats.ResetResourceAmounts();
                 if (baseCharacter.AnimatedUnit != null && baseCharacter.AnimatedUnit.MyCharacterMotor != null) {
-                    MyBaseCharacter.AnimatedUnit.MyCharacterMotor.MyMovementSpeed = MyMovementSpeed;
+                    MyBaseCharacter.AnimatedUnit.MyCharacterMotor.MyMovementSpeed = MovementSpeed;
                     MyBaseCharacter.AnimatedUnit.MyCharacterMotor.ResetPath();
                 } else {
                     //Debug.Log(gameObject.name + ".AIController.Reset(): baseCharacter.myanimatedunit was null!");
@@ -394,15 +394,17 @@ namespace AnyRPG {
 
             if (MyCombatStrategy != null) {
                 if (MyCombatStrategy.HasMusic() == true) {
-                    //Debug.Log(aiController.gameObject.name + "ReturnState.Enter(): combat strategy was not null");
-                    if (LevelManager.MyInstance.GetActiveSceneNode().BackgroundMusicProfile != null && LevelManager.MyInstance.GetActiveSceneNode().BackgroundMusicProfile != null) {
+                    //Debug.Log(gameObject.name + ".AIController.ResetCombat(): attempting to turn off fight music");
+                    AudioProfile musicProfile = LevelManager.MyInstance.GetActiveSceneNode().BackgroundMusicProfile;
+                    if (musicProfile != null) {
                         //Debug.Log(aiController.gameObject.name + "ReturnState.Enter(): music profile was set");
-                        AudioProfile musicProfile = LevelManager.MyInstance.GetActiveSceneNode().BackgroundMusicProfile;
-                        if (musicProfile != null && musicProfile.AudioClip != null && AudioManager.MyInstance.MusicAudioSource.clip != musicProfile.AudioClip) {
+                        if (musicProfile.AudioClip != null && AudioManager.MyInstance.MusicAudioSource.clip != musicProfile.AudioClip) {
                             //Debug.Log(aiController.gameObject.name + "ReturnState.Enter(): playing default music");
-
                             AudioManager.MyInstance.PlayMusic(musicProfile.AudioClip);
                         }
+                    } else {
+                        // There was no music, turn it off instead
+                        AudioManager.MyInstance.StopMusic();
                     }
                 }
                 ResetCombatStrategy();

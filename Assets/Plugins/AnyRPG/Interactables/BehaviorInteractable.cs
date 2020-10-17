@@ -199,6 +199,11 @@ namespace AnyRPG {
 
             // give the interactable a chance to update the nameplate image and minimap indicator since we want the option to interact to be gone while the behavior is playing
             ProcessBehaviorBeginEnd();
+
+            // hope this doesn't cause stack overflow ?  it shouldn't because technically this one exits immediately after that call ?
+            if (behaviorProfile.Looping == true) {
+                behaviorCoroutine = StartCoroutine(playBehavior(behaviorProfile));
+            }
         }
 
 
@@ -207,7 +212,7 @@ namespace AnyRPG {
             if (!base.CanInteract()) {
                 return false;
             }
-            if (GetCurrentOptionList().Count == 0 || suppressNameplateImage == true) {
+            if (GetCurrentOptionCount() == 0 || suppressNameplateImage == true) {
                 return false;
             }
             return true;
@@ -242,7 +247,14 @@ namespace AnyRPG {
         public override int GetCurrentOptionCount() {
             //Debug.Log(gameObject.name + ".BehaviorInteractable.GetCurrentOptionCount()");
             if (behaviorCoroutine == null) {
-                return GetCurrentOptionList().Count;
+                //return GetCurrentOptionList().Count;
+                int count = 0;
+                foreach (BehaviorProfile behaviorProfile in GetCurrentOptionList()) {
+                    if (behaviorProfile.AllowManualStart == true) {
+                        count++;
+                    }
+                }
+                return count;
             } else {
                 return 0;
             }

@@ -21,16 +21,18 @@ namespace AnyRPG {
         //protected Dictionary<EquipmentSlotProfile, Dictionary<PrefabProfile, GameObject>> currentEquipmentPhysicalObjects = new Dictionary<EquipmentSlotProfile, Dictionary<PrefabProfile, GameObject>>();
         protected Dictionary<EquipmentSlotProfile, Dictionary<AttachmentNode, GameObject>> currentEquipmentPhysicalObjects = new Dictionary<EquipmentSlotProfile, Dictionary<AttachmentNode, GameObject>>();
 
-        //protected Transform targetBone;
-
         protected bool eventSubscriptionsInitialized = false;
         protected bool componentReferencesInitialized = false;
         protected bool subscribedToCombatEvents = false;
 
         protected string equipmentProfileName;
 
+        // need a local reference to this for preview characters which don't have a way to reference back to the base character to find this
+        protected AttachmentProfile attachmentProfile;
+
         public Dictionary<EquipmentSlotProfile, Equipment> CurrentEquipment { get => currentEquipment; set => currentEquipment = value; }
         public GameObject MyPlayerUnitObject { get => playerUnitObject; set => playerUnitObject = value; }
+        public AttachmentProfile AttachmentProfile { get => attachmentProfile; set => attachmentProfile = value; }
 
         protected virtual void Start() {
             int numSlots = SystemEquipmentSlotProfileManager.MyInstance.MyResourceList.Count;
@@ -86,11 +88,24 @@ namespace AnyRPG {
             if (baseCharacter == null || baseCharacter.UnitProfile == null || baseCharacter.UnitProfile.EquipmentNameList == null) {
                 return;
             }
+            bool skipModels = false;
+            if (baseCharacter.UnitProfile.IsUMAUnit == true) {
+                // quick check to avoid lookup
+                skipModels = true;
+            } else {
+                // try lookup just in case unit profile wasn't set properly or unit is uma / non uma in different regions (which profile doesn't handle yet)
+                // this avoids annoying message in console for now
+                DynamicCharacterAvatar dynamicCharacterAvatar = baseCharacter.CharacterUnit.GetComponent<DynamicCharacterAvatar>();
+                if (dynamicCharacterAvatar != null) {
+                    skipModels = true;
+                }
+            }
+
 
             foreach (string equipmentName in baseCharacter.UnitProfile.EquipmentNameList) {
                 Equipment equipment = SystemItemManager.MyInstance.GetNewResource(equipmentName) as Equipment;
                 if (equipment != null) {
-                    Equip(equipment);
+                    Equip(equipment, null, skipModels);
                 }
             }
         }
@@ -180,12 +195,12 @@ namespace AnyRPG {
         }
 
         public void SpawnEquipmentObjects(EquipmentSlotProfile equipmentSlotProfile, Equipment newEquipment) {
-            if (newEquipment == null || newEquipment.MyHoldableObjectList == null || equipmentSlotProfile == null) {
+            if (newEquipment == null || newEquipment.HoldableObjectList == null || equipmentSlotProfile == null) {
                 return;
             }
             //Dictionary<PrefabProfile, GameObject> holdableObjects = new Dictionary<PrefabProfile, GameObject>();
             Dictionary<AttachmentNode, GameObject> holdableObjects = new Dictionary<AttachmentNode, GameObject>();
-            foreach (HoldableObjectAttachment holdableObjectAttachment in newEquipment.MyHoldableObjectList) {
+            foreach (HoldableObjectAttachment holdableObjectAttachment in newEquipment.HoldableObjectList) {
                 if (holdableObjectAttachment != null && holdableObjectAttachment.MyAttachmentNodes != null) {
                     foreach (AttachmentNode attachmentNode in holdableObjectAttachment.MyAttachmentNodes) {
                         if (attachmentNode != null && attachmentNode.MyEquipmentSlotProfile != null && equipmentSlotProfile == attachmentNode.MyEquipmentSlotProfile) {
@@ -301,6 +316,10 @@ namespace AnyRPG {
                     if (baseCharacter.UnitProfile.PrefabProfile.AttachmentProfile.AttachmentPointDictionary.ContainsKey(attachmentNode.PrimaryAttachmentName)) {
                         return baseCharacter.UnitProfile.PrefabProfile.AttachmentProfile.AttachmentPointDictionary[attachmentNode.PrimaryAttachmentName];
                     }
+                } else if (attachmentProfile != null) {
+                    if (attachmentProfile.AttachmentPointDictionary.ContainsKey(attachmentNode.PrimaryAttachmentName)) {
+                        return attachmentProfile.AttachmentPointDictionary[attachmentNode.PrimaryAttachmentName];
+                    }
                 } else {
                     Debug.Log(gameObject.name + ".CharacterEquipmentManager.GetSheathedAttachmentPointNode(): could not get attachment profile from prefabprofile");
                 }
@@ -402,7 +421,7 @@ namespace AnyRPG {
             return null;
         }
 
-        public virtual void Equip(Equipment newItem, EquipmentSlotProfile equipmentSlotProfile = null) {
+        public virtual void Equip(Equipment newItem, EquipmentSlotProfile equipmentSlotProfile = null, bool skipModels = false) {
             //Debug.Log(gameObject.name + ".CharacterEquipmentManager.Equip(" + (newItem != null ? newItem.MyName : "null") + ", " + (equipmentSlotProfile == null ? "null" : equipmentSlotProfile.MyName)+ ")");
             //Debug.Break();
             if (newItem == null) {
@@ -411,13 +430,13 @@ namespace AnyRPG {
             }
             //currentEquipment[newItem.equipSlot].MyCharacterButton.DequipEquipment();
             //Unequip(newItem.equipSlot);
-            if (newItem.MyEquipmentSlotType == null) {
+            if (newItem.EquipmentSlotType == null) {
                 Debug.LogError(gameObject + ".CharacterEquipmentManager.Equip() " + newItem.DisplayName + " could not be equipped because it had no equipment slot.  CHECK INSPECTOR.");
                 return;
             }
 
             // get list of compatible slots that can take this slot type
-            List<EquipmentSlotProfile> slotProfileList = GetCompatibleSlotProfiles(newItem.MyEquipmentSlotType);
+            List<EquipmentSlotProfile> slotProfileList = GetCompatibleSlotProfiles(newItem.EquipmentSlotType);
             // check if any are empty.  if not, unequip the first one
             EquipmentSlotProfile emptySlotProfile = equipmentSlotProfile;
             if (emptySlotProfile == null) {
@@ -436,7 +455,7 @@ namespace AnyRPG {
             }
 
             // unequip any item in an exclusive slot for this item
-            UnequipExclusiveSlots(newItem.MyEquipmentSlotType);
+            UnequipExclusiveSlots(newItem.EquipmentSlotType);
 
             //Debug.Log(gameObject.name + ".CharacterEquipmentManager.Equip(): equippping " + newItem.MyName + " in slot: " + emptySlotProfile + "; " + emptySlotProfile.GetInstanceID());
             currentEquipment[emptySlotProfile] = newItem;
@@ -444,9 +463,14 @@ namespace AnyRPG {
 
             //Debug.Break();
             //Debug.Log("Putting " + newItem.GetUMASlotType() + " in slot " + newItem.UMARecipe.wardrobeSlot);
+
             // both of these not needed if character unit not yet spawned?
             HandleItemUMARecipe(newItem);
-            HandleWeaponSlot(emptySlotProfile);
+
+            // testing new code to prevent UKMA characters from trying to find bones before they are created.
+            if (skipModels == false) {
+                HandleWeaponSlot(emptySlotProfile);
+            }
 
             // DO THIS LAST OR YOU WILL SAVE THE UMA DATA BEFORE ANYTHING IS EQUIPPED!
             // updated oldItem to null here because this call is already done in Unequip.
@@ -461,7 +485,7 @@ namespace AnyRPG {
 
             if (equipmentSet != null) {
                 foreach (Equipment tmpEquipment in CurrentEquipment.Values) {
-                    if (tmpEquipment != null && tmpEquipment.MyEquipmentSet != null && tmpEquipment.MyEquipmentSet == equipmentSet) {
+                    if (tmpEquipment != null && tmpEquipment.EquipmentSet != null && tmpEquipment.EquipmentSet == equipmentSet) {
                         equipmentCount++;
                     }
                 }
@@ -523,7 +547,7 @@ namespace AnyRPG {
                     //Debug.Log("Clearing UMA slot " + oldItem.UMARecipe.wardrobeSlot);
                     //avatar.SetSlot(newItem.UMARecipe.wardrobeSlot, newItem.UMARecipe.name);
                     foreach (UMATextRecipe uMARecipe in oldItem.MyUMARecipes) {
-                        if (uMARecipe.compatibleRaces.Contains(dynamicCharacterAvatar.activeRace.name)) {
+                        if (uMARecipe != null && uMARecipe.compatibleRaces.Contains(dynamicCharacterAvatar.activeRace.name)) {
                             dynamicCharacterAvatar.ClearSlot(uMARecipe.wardrobeSlot);
                         }
                     }
